@@ -12,7 +12,7 @@ const newTaskValidationSchema = zod.object({
   task: zod.string().min(1, 'Informe a tarefa'),
   minutesAmount: zod
     .number()
-    .min(5, 'O intervalo precisaser no mínimo de 5 minutos')
+    .min(1, 'O intervalo precisaser no mínimo de 5 minutos')
     .max(60, 'O intervalo precisa ser no máxmio de 60 minutos.')
 });
 
@@ -33,20 +33,49 @@ export function Home() {
     resolver: zodResolver(newTaskValidationSchema),
     defaultValues: {
       task: '',
-      minutesAmount: 5
+      minutesAmount: 1
     }
   });
   const activeCycle = cycles.find(cycle => cycle.id === activeCycleId);
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0;
+  const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0;
+  const minutesAmount = Math.floor(currentSeconds / 60);
+  const secondsAmount = currentSeconds % 60;
+  const minutes = String(minutesAmount).padStart(2, '0');
+  const seconds = String(secondsAmount).padStart(2, '0');
+  const task = watch('task');
+  const isSubmitDisabled = !task;
+
+  useEffect(() => {
+    let interval: number;
+    if (activeCycle) {
+      interval = setInterval(() => {
+        const difference = differenceInSeconds(
+          new Date(),
+          activeCycle.startDate
+        );
+
+        if (difference === totalSeconds) {
+          reset();
+          setActiveCycleId(null);
+          setAmountSecondsPassed(0);
+        } else {
+          setAmountSecondsPassed(
+            differenceInSeconds(new Date(), activeCycle.startDate)
+          );
+        }
+      }, 1000);
+    }
+    return () => {
+      clearInterval(interval);
+    };
+  }, [activeCycle]);
 
   useEffect(() => {
     if (activeCycle) {
-      setInterval(() => {
-        setAmountSecondsPassed(
-          differenceInSeconds(new Date(), activeCycle.startDate)
-        );
-      }, 1000);
+      document.title = `${minutes}: ${seconds}`;
     }
-  }, [activeCycle]);
+  }, [minutes, seconds]);
 
   function handleCreateNewCycle(data: NewCycleFormData) {
     const newCycle: Cycle = {
@@ -58,19 +87,9 @@ export function Home() {
 
     setCycles(state => [...state, newCycle]);
     setActiveCycleId(newCycle.id);
+    setAmountSecondsPassed(0);
     reset();
   }
-
-  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0;
-  const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0;
-  const minutesAmount = Math.floor(currentSeconds / 60);
-  const secondsAmount = currentSeconds % 60;
-
-  const minutes = String(minutesAmount).padStart(2, '0');
-  const seconds = String(secondsAmount).padStart(2, '0');
-
-  const task = watch('task');
-  const isSubmitDisabled = !task;
 
   return (
     <s.HomeContainer>
@@ -98,8 +117,8 @@ export function Home() {
             id="minutesAmount"
             type="number"
             placeholder="00"
-            step={5}
-            min={5}
+            step={1}
+            min={1}
             max={60}
             {...register('minutesAmount', { valueAsNumber: true })}
           />
