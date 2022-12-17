@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { differenceInSeconds } from 'date-fns';
 import { HandPalm, Play } from 'phosphor-react';
 import * as zod from 'zod';
-import { date } from 'zod';
 
 import * as s from './styles';
 
@@ -25,6 +24,7 @@ interface Cycle {
   minutesAmount: number;
   startDate: Date;
   interruptedDate?: Date;
+  finishedDate?: Date;
 }
 
 export function Home() {
@@ -58,13 +58,23 @@ export function Home() {
         );
 
         if (difference === totalSeconds) {
-          reset();
+          setCycles(state =>
+            state.map(cycle => {
+              if (cycle.id === activeCycleId) {
+                return {
+                  ...cycle,
+                  finishedDate: new Date()
+                };
+              } else {
+                return cycle;
+              }
+            })
+          );
           setActiveCycleId(null);
           setAmountSecondsPassed(0);
+          reset();
         } else {
-          setAmountSecondsPassed(
-            differenceInSeconds(new Date(), activeCycle.startDate)
-          );
+          setAmountSecondsPassed(difference);
         }
       }, 1000);
     }
@@ -94,8 +104,8 @@ export function Home() {
   }
 
   function handleInterruptCycle() {
-    setCycles(
-      cycles.map(cycle => {
+    setCycles(state =>
+      state.map(cycle => {
         if (cycle.id === activeCycleId) {
           return {
             ...cycle,
