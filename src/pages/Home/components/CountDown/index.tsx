@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form';
 
 import { differenceInSeconds } from 'date-fns';
 
-import { CyclesContext } from '../../index.page';
+import { CyclesContext } from '../../../../contexts/CyclesContext';
 
 import * as s from './styles';
 
