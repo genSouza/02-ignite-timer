@@ -1,10 +1,4 @@
-export const CycleActions = {
-  INTERRUPT_CURRENT_CYCLE: 'INTERRUPT_CURRENT_CYCLE',
-  ADD_NEW_CYCLE: 'ADD_NEW_CYCLE',
-  MARK_CURRENT_CYCLE_AS_FINISHED: 'MARK_CURRENT_CYCLE_AS_FINISHED'
-} as const;
-
-type ActionsType = typeof CycleActions[keyof typeof CycleActions];
+import { CycleActions } from './Actions';
 
 export interface Cycle {
   id: string;
@@ -20,10 +14,7 @@ interface CyclesState {
   activeCycleId: string | null;
 }
 
-export function cyclesReducer(
-  state: CyclesState,
-  action: { type: ActionsType; payload: any }
-) {
+export function cyclesReducer(state: CyclesState, action: any) {
   switch (action.type) {
     case CycleActions.ADD_NEW_CYCLE:
       return {
